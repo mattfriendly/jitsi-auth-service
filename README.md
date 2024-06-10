@@ -72,22 +72,3 @@ Configure your NGINX to proxy requests to the Go server:
     }
     ```
 
-### Deployment
-
-Add additional notes about how to deploy this on a live system. This section should detail recommended practices for deployment, including any additional security measures to consider.
-
-### Built With
-
-Go - The Go Programming Language
-NGINX - High-performance HTTP server and reverse proxy
-Auth0 - Modern Identity Platform
-
-### Contributing
-
-### Versioning
-
-### Authors
-
-### License
-
-
