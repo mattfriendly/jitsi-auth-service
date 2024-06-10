@@ -70,5 +70,3 @@ Configure your NGINX to proxy requests to the Go server:
            proxy_cache_bypass $http_upgrade;
        }
     }
-    ```
-
