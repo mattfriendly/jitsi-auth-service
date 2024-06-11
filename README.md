@@ -70,3 +70,19 @@ Configure your NGINX to proxy requests to the Go server:
            proxy_cache_bypass $http_upgrade;
        }
     }
+
+### Deployment
+
+### Built With
+
+Go - The Go Programming Language
+NGINX - High-performance HTTP server and reverse proxy
+Auth0 - Modern Identity Platform
+
+### Authors
+
+@mattfriendly
+
+### License
+
+

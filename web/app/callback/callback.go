@@ -4,6 +4,7 @@ package callback
 
 import (
 	"net/http"
+        "log"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -27,6 +28,9 @@ func Handler(auth *authenticator.Authenticator) gin.HandlerFunc {
             return
         }
 
+        // Log the Access Token
+        log.Printf("Access Token: %s", token.AccessToken)
+
         // Extract the ID Token from the OAuth2 token.
         rawIDToken, ok := token.Extra("id_token").(string)
         if !ok {
@@ -40,6 +44,9 @@ func Handler(auth *authenticator.Authenticator) gin.HandlerFunc {
             ctx.String(http.StatusInternalServerError, "Failed to verify ID Token.")
             return
         }
+
+        // Log the ID Token
+        log.Printf("ID Token: %s", rawIDToken)
 
         // Extract user profile from the ID Token.
         var profile map[string]interface{}
