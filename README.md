@@ -56,7 +56,7 @@ A step-by-step series of examples that tell you how to get a development environ
 
 Configure your NGINX to proxy requests to the Go server:
 
-   ```
+```
    server {
       listen 443 ssl;
       server_name yourdomain.com;
@@ -70,6 +70,7 @@ Configure your NGINX to proxy requests to the Go server:
            proxy_cache_bypass $http_upgrade;
        }
     }
+```
 
 ### Deployment
 
