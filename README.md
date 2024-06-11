@@ -76,13 +76,13 @@ Configure your NGINX to proxy requests to the Go server:
 
 ### Built With
 
-Go - The Go Programming Language
-NGINX - High-performance HTTP server and reverse proxy
-Auth0 - Modern Identity Platform
+- Go - The Go Programming Language
+- NGINX - High-performance HTTP server and reverse proxy
+- Auth0 - Modern Identity Platform
 
 ### Authors
 
-@mattfriendly
+- @mattfriendly
 
 ### License
 
