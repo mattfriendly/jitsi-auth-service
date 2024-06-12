@@ -12,6 +12,7 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 
+        "jitsi-auth0-service/platform"
 	"jitsi-auth0-service/platform/authenticator"
 	"jitsi-auth0-service/platform/middleware"
 	"jitsi-auth0-service/web/app/callback"
@@ -20,33 +21,34 @@ import (
 	"jitsi-auth0-service/web/app/user"
 )
 
-// Somewhere in your router setup file
-/*func authCheckHandler(auth *authenticator.Authenticator) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        // Extract the token from the Authorization header or cookie
-        token, err := c.Cookie("auth_token") // or c.GetHeader("Authorization")
-        if err != nil {
-            c.AbortWithStatus(http.StatusUnauthorized)
-            return
-        }
-
-        // Verify the ID Token
-        _, err = auth.VerifyIDToken(c.Request.Context(), token)
-        if err != nil {
-            c.AbortWithStatus(http.StatusUnauthorized)
-            return
-        }
-
-        // If token is valid, proceed
-        c.Status(http.StatusOK)
+func getClientIP(c *gin.Context) string {
+    // Retrieve IP from the X-Real-IP header set by Nginx
+    ip := c.GetHeader("X-Real-IP")
+    if ip == "" {
+        ip = c.ClientIP()  // Fallback to default method if header is not set
     }
+    return ip
 }
-*/
 
-func authCheckHandler(auth *authenticator.Authenticator) gin.HandlerFunc {
+func authCheckHandler(auth *authenticator.Authenticator, ipStore *platform.IPStore) gin.HandlerFunc {
     return func(c *gin.Context) {
-        // Extract the token from the Authorization header
+        ip := getClientIP(c)
+        if !ipStore.Exists(ip) {
+            log.Printf("Access denied for unrecognized IP: %s", ip)
+            c.AbortWithStatus(http.StatusUnauthorized)
+            return
+        }
+        log.Printf("Access granted for recognized IP: %s", ip)
+
+        // Try to extract the token from the Authorization header first
         authHeader := c.GetHeader("Authorization")
+        if authHeader == "" {
+            // If Authorization header is missing, try to extract the token from cookies
+            if cookie, err := c.Cookie("auth_token"); err == nil {
+                authHeader = "Bearer " + cookie
+            }
+        }
+
         if authHeader == "" {
             c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
             return
@@ -86,13 +88,13 @@ func authCheckHandler(auth *authenticator.Authenticator) gin.HandlerFunc {
             return
         }
 
-        // Token is valid, and userinfo is obtained successfully
+        log.Printf("Token validated successfully, User info: %s", string(body))
         c.JSON(http.StatusOK, gin.H{"success": true, "data": string(body)})
     }
 }
 
 // New registers the routes and returns the router.
-func New(auth *authenticator.Authenticator) *gin.Engine {
+func New(auth *authenticator.Authenticator, ipStore *platform.IPStore) *gin.Engine {
 	router := gin.Default()
 
 	// To store custom types in our cookies,
@@ -103,17 +105,16 @@ func New(auth *authenticator.Authenticator) *gin.Engine {
 	router.Use(sessions.Sessions("auth-session", store))
 
 	router.Static("/public", "web/static")
-	router.LoadHTMLGlob("web/template/user.html")
-	router.LoadHTMLGlob("web/template/home.html")
+        router.LoadHTMLFiles("web/template/user.html", "web/template/home.html")
 
 	router.GET("/", func(ctx *gin.Context) {
 		ctx.HTML(http.StatusOK, "home.html", nil)
 	})
-	router.GET("/login", login.Handler(auth))
+	router.GET("/login", login.Handler(auth, ipStore))
+        router.GET("/auth_check", authCheckHandler(auth, ipStore))
 	router.GET("/callback", callback.Handler(auth))
 	router.GET("/user", middleware.IsAuthenticated, user.Handler)
 	router.GET("/logout", logout.Handler)
-        router.GET("/auth_check", authCheckHandler(auth))
 
 	return router
 }

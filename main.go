@@ -8,7 +8,8 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"jitsi-auth0-service/platform/authenticator"
+	"jitsi-auth0-service/platform"
+        "jitsi-auth0-service/platform/authenticator"
 	"jitsi-auth0-service/platform/router"
 )
 
@@ -26,7 +27,9 @@ func main() {
 		log.Fatalf("Failed to initialize the authenticator: %v", err)
 	}
 
-	rtr := router.New(auth)
+        ipStore := platform.NewIPStore()  // Assuming IPStore is part of the authenticator package
+
+	rtr := router.New(auth, ipStore)
 
 	log.Print("Server listening on http://hook.obscurenetworks.com:3033/")
 	if err := http.ListenAndServeTLS(address, certPath, keyPath, rtr); err != nil {
